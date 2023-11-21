@@ -1,10 +1,13 @@
 library('reshape2')
 library('ggplot2')
-library('ggplot')
 
-reference=readLines("C:/Users/Pedro/Desktop/FGV/GRADUA��O/6� PER�ODO/PROCESSOS ESTOC�STICOS/TRABALHO EM GRUPO/CRIPTOGRAFIA/biblia.txt")
+# Lê o texto e converte todas as letras para maiúsculas
+reference=readLines("C:/Users/Pedro/Desktop/FGV/GRADUAÇÃO/6º PERÍODO/PROCESSOS ESTOCÁSTICOS/TRABALHO EM GRUPO/CRIPTOGRAFIA/la_divina_comedia.txt")
 reference=toupper(reference)
 
+# Inicializa uma matriz de transição entre letras do alfabeto.
+# Percorre o texto de referência e conta a frequência de transição de uma letra para outra. 
+# Essa informação será usada para calcular as probabilidades de transição.
 trans.mat=matrix(0,27,27)
 rownames(trans.mat)=colnames(trans.mat)=c(toupper(letters),"")
 lastletter=""
@@ -34,14 +37,17 @@ for (ln in 1:length(reference)) {
   lastletter=""
 }
 
+# Calcula as probabilidades de transição a partir da matriz de contagem.
 trans.prob.mat=sweep(trans.mat+1,1,rowSums(trans.mat+1),FUN="/")
 
+# Cria um heatmap que representa visualmente as probabilidades de transição entre letras do alfabeto.
 ggplot(melt(trans.prob.mat),aes(Var2,Var1))+geom_tile(aes(fill=value))+
-  scale_fill_gradient(low="white",high="black",limits=c(0,1))+
+  scale_fill_gradient(low="skyblue",high="darkblue",limits=c(0,1))+
   labs(x="Letra seguinte",y="Letra atual",fill="Prob")+
   scale_y_discrete(limits = rev(levels(melt(trans.prob.mat)$Var1)))+
   coord_equal()
 
+# Define uma função para decodificar um texto usando um mapeamento específico de letras.
 decode <- function(mapping,coded) {
   coded=toupper(coded)
   decoded=coded
@@ -53,7 +59,7 @@ decode <- function(mapping,coded) {
   decoded
 }
 
-
+# Calcula a log probabilidade de um texto decodificado com base nas probabilidades de transição.
 log.prob <- function(mapping,decoded) {
   logprob=0
   
@@ -79,16 +85,20 @@ log.prob <- function(mapping,decoded) {
   logprob
 }
 
+# Define um texto original e o codifica aleatoriamente para criar um texto criptografado.
+
 #correctTxt="ENTER HAMLET HAM TO BE OR NOT TO BE THAT IS THE QUESTION WHETHER TIS NOBLER IN THE MIND TO SUFFER THE SLINGS AND ARROWS OF OUTRAGEOUS FORTUNE OR TO TAKE ARMS AGAINST A SEA OF TROUBLES AND BY OPPOSING END"
 #correctTxt="UM ENORME SORRISO LHE ORNAVA O FOCINHO AS ORELHAS ESTAVAM PARA TRAS GRUDADAS NO CRANIO A SOMBRA CORRIA AO SEU LADO NO CAPIM MANCHADO DE FULIGEM JULIA SE AJOELHOU E ESTENDEU OS BRACOS"
-#correctTxt="EU GOSTO MUITO DO RODRIGO POIS ELE IMITA GATOS E SABE FAZER UM QUEIJO QUENTE MUITO GOSTOSO FAZ SENTIDO ELE ENTENDER TANTO SOBRE QUEIJOS AFINAL DE CONTAS ELE E MINEIRO"
-#correctTxt="Quella circulazion che s� concetta pareva in te come lume reflesso, da li occhi miei alquanto circunspetta, dentro da s�, del suo colore stesso, mi parve pinta de la nostra effige"
+correctTxt="Quella circulazion che sì concetta pareva in te come lume reflesso, da li occhi miei alquanto circunspetta, dentro da sé, del suo colore stesso, mi parve pinta de la nostra effige"
 #correctTxt="MAS TALVEZ FOSSE UM ABISMO EM QUE HOMENS MELHORES DO QUE ELE TIVESSEM CAIDO SE ELA TIVESSE RECONSIDERADO TUDO NA SUA VIDA DAI PARA A FRENTE TERIA MUDADO PORQUE ELA DEVE TER CONSEGUIDO SAIR NUNCA MAIS ELE VIU A LOURA DE ROSTO VICOSO NEM O FORD VELHO E SUJO"
-#correctTxt = "Ainda cheguei a tempo para incluir no invent�rio da l�ngua nacional milhares de verbas, que �manhan estariam sonegadas por essa insaci�vel cabe�a de casal, que se chama civiliza��o, o que, desculpando-se com os seus intuitos nobil�ssimos, procura locupletar-se � custa de tudo e apesar de tudo."
-correctTxt = "Mi iris al la fundamento hodiau kaj alvenis tute malseka car multe pluvis"
-coded=decode(sample(toupper(letters)),correctTxt) # randomly scramble the text
+#correctTxt = "Ainda cheguei a tempo para incluir no inventário da língua nacional milhares de verbas, que àmanhan estariam sonegadas por essa insaciável cabeça de casal, que se chama civilização, o que, desculpando-se com os seus intuitos nobilíssimos, procura locupletar-se á custa de tudo e apesar de tudo."
+#correctTxt = "Mi iris al la fundamento hodiaŭ kaj alvenis tute malseka ĉar multe pluvis"
+coded=decode(sample(toupper(letters)),correctTxt)
 
-mapping=sample(toupper(letters)) # initialize a random mapping
+# Inicializa um mapeamento aleatório e itera sobre tentativas de permutação.
+# Usa o algoritmo Metropolis-Hastings para aceitar ou rejeitar permutações com base em probabilidades.
+# O objetivo é encontrar o mapeamento que maximiza a log probabilidade do texto decodificado.
+mapping=sample(toupper(letters))
 i=1
 iters=1500
 cur.decode=decode(mapping,coded)
@@ -96,7 +106,7 @@ cur.loglike=log.prob(mapping,cur.decode)
 max.loglike=cur.loglike
 max.decode=cur.decode
 while (i<=iters) {
-  proposal=sample(1:26,2) # select 2 letters to switch
+  proposal=sample(1:26,2)
   prop.mapping=mapping
   prop.mapping[proposal[1]]=mapping[proposal[2]]
   prop.mapping[proposal[2]]=mapping[proposal[1]]
