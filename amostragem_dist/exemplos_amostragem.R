@@ -2,7 +2,7 @@
 # --------------------------------- # Exp # ------------------------------------
 # ------------------------------------------------------------------------------
 
-f_obj <- function(x, lambda){
+f_obj_exp <- function(x, lambda){
   return(ifelse(x < 0, 0, lambda*exp(-lambda*x)))
 }
 
@@ -12,7 +12,7 @@ mh_exp <- function(x_atual, n, lambda){
   x[1] <- x_atual
   for(i in c(2:n)){
     x_prop <- x_atual + rnorm(1, mean=0, sd=1)
-    rho <- min(f_obj(x_prop, lambda)/f_obj(x_atual, lambda), 1)
+    rho <- min(f_obj_exp(x_prop, lambda)/f_obj_exp(x_atual, lambda), 1)
     if(runif(1) < rho){
       x_atual <- x_prop
     }
@@ -21,29 +21,33 @@ mh_exp <- function(x_atual, n, lambda){
   return(x)
 }
 
-x <- mh_exp(2, 10000, 1)
+x_exp <- mh_exp(2, 10000, 1)
 
-hist(y,xlim=c(0,10),probability = TRUE, main="Histogram of values of x visited by MH algorithm")
-xx = seq(0,10,length=100)
-lines(xx,f_obj(xx, 1),col="red")
+hist(x_exp, xlim=c(0,10), probability = TRUE, 
+     main = "Histograma dos valores de x visitados pelo algoritmo MH", 
+     xlab = "x",
+     ylab = "Densidade")
+pontos_exp = seq(0,10,length=100)
+lines(pontos_exp, f_obj_exp(pontos_exp, 1),col="red")
 
-y <- vector()
+y_exp <- vector()
 
 for(i in c(1:1000)){
   x_0 <- runif(1, 10, 20)
-  y[i] <- mh_exp(x_0, 10000, 1)[10000]
+  y_exp[i] <- mh_exp(x_0, 10000, 1)[10000]
 }
 
-
-hist(y,xlim=c(0,10),probability = TRUE, main="Histogram of values of x visited by MH algorithm")
-xx = seq(0,10,length=100)
-lines(xx,f_obj(xx, 1),col="red")
+hist(y_exp, xlim=c(0,10), probability = TRUE, 
+     main = "Histograma dos valores de x visitados pelo algoritmo MH", 
+     xlab = "x",
+     ylab = "Densidade")
+lines(pontos_exp, f_obj_exp(pontos_exp, 1), col="red")
 
 # ------------------------------------------------------------------------------
 # -------------------------------- # Normal # ----------------------------------
 # ------------------------------------------------------------------------------
 
-f_obj <- function(x){
+f_obj_norm <- function(x){
   return(1/sqrt(2*pi)*exp(-x^2/2))
 }
 
@@ -61,13 +65,16 @@ mh_norm <- function(x_atual, n){
   return(x)
 }
 
-x <- mh_norm(0, 10000)
+x_norm <- mh_norm(0, 10000)
 
-hist(x, probability = TRUE, main="Histogram of values of x visited by MH algorithm")
-xx = seq(-10,10,length=100)
-lines(xx,f_obj(xx),col="red")
+hist(x_norm, xlim=c(-5,5), probability = TRUE, 
+     main = "Histograma dos valores de x visitados pelo algoritmo MH", 
+     xlab = "x",
+     ylab = "Densidade")
+pontos_norm <- seq(-10,10, length=100)
+lines(pontos_norm, f_obj_norm(pontos_norm), col="red")
 
-y <- vector()
+y_norm <- vector()
 
 for(i in c(1:1000)){
   x_0 <- 0
@@ -75,20 +82,22 @@ for(i in c(1:1000)){
 }
 
 
-hist(y, probability = TRUE, main="Histogram of values of x visited by MH algorithm")
-xx = seq(-10,10,length=100)
-lines(xx,f_obj(xx),col="red")
+hist(y_norm, probability = TRUE, 
+     main = "Histograma dos valores de x visitados pelo algoritmo MH", 
+     xlab = "x",
+     ylab = "Densidade")
+lines(pontos_norm, f_obj_norm(pontos_norm),col="red")
 
 
 # ------------------------------------------------------------------------------
-# ----------------------------- # Biv Normal # ---------------------------------
+# ----------------------------- # Normal Biv # ---------------------------------
 # ------------------------------------------------------------------------------
 library(mnormt)
 
 rho <- -0.60
-n <- 2000
+n <- 20000
 sdev <- sqrt(1-rho^2)
-bfx <- matrix(rep(0,2*n),ncol=2)
+bfx <- matrix(rep(0,2*n), ncol=2)
 for (i in 2:n) {
   bfx[i,1] <- rnorm(1, rho*bfx[i-1,2], sdev)
   bfx[i,2] <- rnorm(1, rho*bfx[i,1], sdev)
@@ -101,6 +110,5 @@ sigma <- matrix(c(1, rho, rho, 1), nrow=2)
 f <- function(x, y) dmnorm(cbind(x, y), mu, sigma)
 z <- outer(x, y, f)
 
-#create contour plot
 contour(x, y, z)
 plot(bfx, xlim = c(-3,3), ylim = c(-3,3), pch=20, xlab="x", ylab="y", main="")
